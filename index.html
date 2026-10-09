@@ -457,12 +457,13 @@ CATS.forEach(([k, t, c]) => {
   b.addEventListener('click', () => { on.has(k) ? on.delete(k) : on.add(k); b.setAttribute('aria-pressed', on.has(k)); refresh(); });
   chipsEl.appendChild(b); chipBtns[k] = b;
 });
-const recOn = new Set(RECS), stOn = new Set(STATUSES);
+// 歇業預設隱藏，點「歇業」chip 才顯示
+const recOn = new Set(RECS), stOn = new Set(STATUSES.filter(s => s !== '歇業'));
 function subChips(elId, keys, set, field) {
   const el = document.getElementById(elId);
   keys.forEach(k => {
     const n = PLACES.filter(p => field === 'rec' ? p.rec.includes(k) : p[field] === k).length; if (!n) return;
-    const b = document.createElement('button'); b.className = 'chip plain'; b.setAttribute('aria-pressed', 'true');
+    const b = document.createElement('button'); b.className = 'chip plain'; b.setAttribute('aria-pressed', set.has(k));
     b.innerHTML = `${k}<span>${n}</span>`;
     b.addEventListener('click', () => { set.has(k) ? set.delete(k) : set.add(k); b.setAttribute('aria-pressed', set.has(k)); refresh(); });
     el.appendChild(b);
