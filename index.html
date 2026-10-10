@@ -1,3 +1,7 @@
+<!doctype html>
+<html lang="zh-Hant">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>首爾踏查圖</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&display=swap">
@@ -36,7 +40,8 @@
   --land: #1A2228; --water: #1F3A4C; --water-edge: #2B4C61; --peak: #8C9A93; --area: #C4CED5; --accent: #F06A3C;
   --chip-off: #212C34; --bad: #F07B6B; --star: #F2B53A; --sel: #FFFFFF; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.3); color-scheme: dark; }
 
-html, body { height: 100%; }
+html, body { height: 100%; margin: 0; }
+*, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.5; }
 .app { display: grid; grid-template-columns: minmax(300px, 380px) 1fr; height: 100%; min-height: 560px; }
@@ -263,6 +268,14 @@ blockquote.q cite { display: block; font-style: normal; font-size: 11px; color: 
   body.listview #map, body.listview .areas, body.listview #list, body.listview .listbar { display: none; }
   .ov-bar { top: env(safe-area-inset-top, 0px); }
   .ov-grid { grid-template-columns: 1fr; }
+  /* 手機：雙指縮放取代 +/- 按鈕；色系 chip 排成一列可橫滑；標頭縮小 */
+  .leaflet-control-zoom { display: none; }
+  .leaflet-control-attribution { font-size: 9px; }
+  .fams { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding-inline: 16px; }
+  .fams::-webkit-scrollbar { display: none; }
+  .fam { flex: none; }
+  header h1 { font-size: 18px; }
+  .areas { top: 8px; left: 8px; right: 8px; max-width: calc(100% - 16px); }
   .leaflet-popup-content { max-width: 260px; }
 }
 @media (prefers-reduced-motion: reduce) { .dot span { transition: none; } }
@@ -477,7 +490,7 @@ const quoteHTML = p => p.quote.map(q => `<blockquote class="q"><div>${esc(q.text
 const noteHTML = p => p.note ? `<p class="note"><span class="nb">${p.note_by === '書' ? '書中' : '查證'}</span>${esc(p.note).replace(/【查證】/g, '<br><span class="nb">查證</span>')}${p.note_src ? ` <a href="${esc(p.note_src)}" target="_blank" rel="noopener" style="color:var(--accent)">來源↗</a>` : ''}</p>` : '';
 // 排程用的關鍵事實：休息日、預約、限定期間做成小標籤，營業時間放後面的灰字
 const factsHTML = p => {
-  const pills = [p.closed.length ? `週${p.closed.join('')}休` : '', p.booking === '必要' ? '要預約' : p.booking === '建議' ? '建議預約' : '', p.window, p.approx ? '位置約略' : ''].filter(Boolean);
+  const pills = [p.closed.length ? `週${p.closed.join('')}休` : '', p.booking === '必要' ? '要預約' : p.booking === '建議' ? '建議預約' : '', p.window].filter(Boolean);
   if (!pills.length && !p.hours_note) return '';
   return `<div class="facts">${pills.map(x => `<span>${esc(x)}</span>`).join('')}${p.hours_note ? `<small>${esc(p.hours_note)}</small>` : ''}</div>`;
 };
@@ -589,7 +602,8 @@ function renderList() {
       it.innerHTML = `<i class="${p.approx ? 'approx' : ''}${DEAD.has(p.status) ? ' dead' : ''}"></i><b>${esc(p.name)}</b><small>${p.status !== '候選' ? `<em>${esc(p.status)}</em>` : ''}${esc(p.area)}</small>`;
       it.addEventListener('click', () => {
         if (view === 'list') return focusCard(p.id);
-        select(p.id, true); if (isNarrow()) document.querySelector('.mapwrap').scrollIntoView({ behavior: 'smooth' });
+        // 手機：先把地圖捲進畫面，再縮放打開彈窗（同時做的話縮放動畫會被捲動打斷）
+        if (isNarrow()) { window.scrollTo({ top: 0 }); setTimeout(() => select(p.id, true), 80); } else select(p.id, true);
       });
       listEl.appendChild(it);
     });
@@ -700,3 +714,5 @@ new ResizeObserver(() => {
 refresh(); layersByZoom();
 if (view === "list") setView("list");
 </script>
+
+</html>
